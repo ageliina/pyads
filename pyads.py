@@ -63,12 +63,6 @@ QUERY_DICT = {k: v for k, v in ARGS.__dict__.items() if v}
 # Include these fields in the query result
 FIELDS = ["first_author", "bibcode", "title", "year"]
 
-def get_link(paper):
-    """
-    Return a link for the papers bibcode.
-    """
-    return "https://ui.adsabs.harvard.edu/link_gateway/%s/" % paper.bibcode
-
 def print_header():
     """
     Pretty print the header information
