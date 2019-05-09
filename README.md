@@ -30,3 +30,9 @@ Useful links for the ADS API and the `ads` python package
 + <http://adsabs.github.io/help/api/>
 + <https://github.com/adsabs/adsabs-dev-api/blob/master/Search_API.ipynb>
 + <https://adsabs.github.io/help/search/comprehensive-solr-term-list>
+
+# TODO
+
++ Extend the list of arguments already provided
++ Add options for controlling output e.g. provide links to abstract, pdf
+  download.
