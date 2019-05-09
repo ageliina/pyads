@@ -94,7 +94,9 @@ def main():
     """
 
     # Check for empty dictionary
-    if (len(QUERY_DICT) == 1 and "sort" in QUERY_DICT):
+    if (len(QUERY_DICT) == 2
+        and ("sort" in QUERY_DICT)
+        and "rows" in QUERY_DICT):
         print("Error: At least one search parameter must be provided.",
               file=sys.stderr)
         PARSER.print_usage()
