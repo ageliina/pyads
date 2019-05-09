@@ -4,9 +4,9 @@ Stupid command line tool to query the ADS database.
 
 # Installation
 
-For querying the ADS database, one needs to sign up to ADS an obtain an API key.
-Detailed instructions may be found from the installation guide for the `ads`
-python package at <https://ads.readthedocs.io/en/latest/>.
+For querying the ADS database, one needs to sign up to ADS and obtain an API
+key. Detailed instructions may be found from the installation guide for the
+`ads` python package at <https://ads.readthedocs.io/en/latest/>.
 
 # Examples
 
