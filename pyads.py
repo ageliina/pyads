@@ -44,6 +44,7 @@ GROUP_QUERY.add_argument("-s", "--sort", nargs='?', type=str,
                          default="citation_count desc",
                          help="Sort string e.g. citation_count desc.")
 GROUP_QUERY.add_argument("-y", "--year", nargs='?', type=str,
+                         default=time.localtime().tm_year,
                          help="Year search string e.g. 2000-2001.")
 
 # Arguments to control the output formatting
