@@ -26,85 +26,55 @@ import time
 import ads
 
 DESCRIPTION = "Query the ADS database."
+PARSER = argparse.ArgumentParser(description=DESCRIPTION)
 
-GROUPS = (
-        {"title": "Query arguments",
-         "description": "Arguments for ADS query control"},
-        {"title": "Output arguments",
-         "description": "Arguments for output control"}
-)
-
-# Set up the command line options
-ARGUMENTS_QUERY = (
-    (["-a", "--author"], {"nargs": '?',
-                          "type": str,
-                          "help": "Author search string e.g. doe, john."}),
-    (["-b", "--bibstem"], {"nargs": '?',
-                           "type": str,
-                           "help": "Bibstem search string e.g. apj."}),
-    (["-f", "--full"], {"nargs": '?',
-                        "type": str,
-                        "help": "Full text search e.g. gravity."}),
-    (["-n", "--rows"], {"nargs": '?',
-                        "type": int,
-                        "default": 10,
-                        "help": "Number of rows to show."}),
-    (["-s", "--sort"], {"nargs": '?',
-                        "type": str,
-                        "default": "citation_count desc",
-                        "help": "Sort string e.g. citation_count desc."}),
-    (["-y", "--year"], {"nargs": '?',
-                        "type": str,
-                        "help": "Year search string e.g. 2000-2001."}),
-)
+# Arguments to control the ADS query
+GROUP_QUERY = \
+    PARSER.add_argument_group(title="Query arguments",
+                              description="Arguments for ADS query control")
+GROUP_QUERY.add_argument("-a", "--author", nargs='?', type=str,
+                         help="Author search string e.g. doe, john.")
+GROUP_QUERY.add_argument("-b", "--bibstem", nargs='?', type=str,
+                         help="Bibstem search string e.g. apj.")
+GROUP_QUERY.add_argument("-f", "--full", nargs='?', type=str,
+                         help="Full text search e.g. gravity.")
+GROUP_QUERY.add_argument("-n", "--rows", nargs='?', type=int, default=10,
+                         help="Number of rows to show.")
+GROUP_QUERY.add_argument("-s", "--sort", nargs='?', type=str,
+                         default="citation_count desc",
+                         help="Sort string e.g. citation_count desc.")
+GROUP_QUERY.add_argument("-y", "--year", nargs='?', type=str,
+                         help="Year search string e.g. 2000-2001.")
 
 # Arguments to control the output formatting
-ARGUMENTS_OUTPUT = (
-    (["--print_one_per_line"], {"action": "store_true",
-                                "help": "Print one line of output for each query result"}),
-    (["--print_first_author"], {"action": "store_true",
-                                "help": "Print the first author."}),
-    (["--print_authors"], {"action": "store_true",
-                           "help": "Print all of the authors."}),
-    (["--print_bibstem"], {"action": "store_true",
-                           "help": "Print the bibstem, e.g. A&A"}),
-    (["--print_year"], {"action": "store_true",
-                        "help": "Print the year."}),
-    (["--print_abs"], {"action": "store_true",
-                       "help": "Print the full abstract."}),
-    (["--print_url_abs"], {"action": "store_true",
-                           "help": "Print the ADS URL for the abstract."}),
-    (["--print_url_pdf"], {"action": "store_true",
-                           "help": "Print the ADS URL for the downloadables."}),
-)
-ARGUMENTS = ARGUMENTS_QUERY, ARGUMENTS_OUTPUT
+GROUP_OUTPUT = \
+    PARSER.add_argument_group(title="Output arguments",
+                              description="Arguments for output control")
+GROUP_OUTPUT.add_argument("--print_row", action="store_true", default=True,
+                          help="Print a formatted row (bibcode, first author,\
+                                year, title) for each query result.")
+GROUP_OUTPUT.add_argument("--print_abstract", action="store_true",
+                          help="Print the full abstract.")
+GROUP_OUTPUT.add_argument("--print_bibtex", action="store_true",
+                          help="Print the bibtex entry.")
+GROUP_OUTPUT.add_argument("--print_url_abs", action="store_true",
+                          help="Print the ADS URL for the abstract.")
+GROUP_OUTPUT.add_argument("--print_url_pdf", action="store_true",
+                          help="Print the ADS URL for the downloadables.")
 
 # Parse the command line arguments
-PARSER = argparse.ArgumentParser(description=DESCRIPTION)
-for group, arguments in zip(GROUPS, ARGUMENTS):
-    _group = PARSER.add_argument_group(**group)
-    for args, kwargs in arguments:
-        _group.add_argument(*args, **kwargs)
 ARGS = PARSER.parse_args()
-print(ARGS)
 
-# Build the query dictionary i.e. filter out `none` values
-#QUERY_DICT = {k: v for k, v in ARGS.__dict__.items() if v}
+# Build the query dictionary i.e. filter out `none` values and invalid fields
+VALID_FIELDS = ["author", "bibstem", "full", "rows", "sort", "year"]
+QUERY_DICT = {k: v for k, v in ARGS.__dict__.items() if v and k in VALID_FIELDS}
 
 # Include these fields in the query result
-FIELDS = ["first_author", "bibcode", "title", "year", "bibtex"]
-
-def print_header():
-    """
-    Pretty print the header information
-    """
-    print("%-19s %-15s %-04s %-100s" % ("bibcode", "author", "year", "title"),
-          file=sys.stderr)
-    print("", file=sys.stderr)
+FIELDS = ["abstract", "bibcode", "bibtex", "first_author", "title", "year"]
 
 def print_row(paper):
     """
-    Pretty print the essential information of a paper
+    Pretty print the essential information of a paper.
     """
     func_trunc = lambda s, x: s if len(s) < x else s[:x-3] + "..."
     print(u"%-19s %-15s %04s %-100s"
@@ -113,34 +83,47 @@ def print_row(paper):
              paper.year,
              func_trunc(paper.title[0], 100)))
 
+def print_abstract(paper):
+    """
+    Print the full abstract of the paper.
+    """
+    print(paper.abstract)
+
 def print_bibtex(paper):
-    print(paper.bibtex)
+    """
+    Print the bibtex entry of the paper.
+    """
+    print(ads.ExportQuery(paper.bibcode)())
+
+def print_url_abs(paper):
+    """
+    Print the url to the ADS abstract.
+    """
+    print("https://ui.adsabs.harvard.edu/abs/%s/abstract" % paper.bibcode)
+
+def print_url_pdf(paper):
+    """
+    Print the url to the ADS link gateway.
+    """
+    print("https://ui.adsabs.harvard.edu/link_gateway/%s" % paper.bibcode)
 
 def main():
     """
     Query ADS for the search string and print formatted results.
     """
 
-    # Check for empty dictionary
-    #if (len(QUERY_DICT) == 2
-    #    and ("sort" in QUERY_DICT)
-    #    and "rows" in QUERY_DICT):
-    #    print("Error: At least one search parameter must be provided.",
-    #          file=sys.stderr)
-    #    PARSER.print_usage()
-    #    return 0
-
     # Query the ADS database
     query = ads.SearchQuery(fl=FIELDS, **QUERY_DICT)
 
     # Print the output
-    print_header()
     for paper in query:
-#        print_row(paper)
-        print_bibtex(paper)
+        if ARGS.print_row:      print_row(paper)
+        if ARGS.print_abstract: print_abstract(paper)
+        if ARGS.print_bibtex:   print_bibtex(paper)
+        if ARGS.print_url_abs:  print_url_abs(paper)
+        if ARGS.print_url_pdf:  print_url_pdf(paper)
 
     # Print useful information about remaining quota and reset time
-    print("", file=sys.stderr)
     print("Remaining (limit): %4s (%4s)"
           % (query.response.get_ratelimits()["remaining"],
              query.response.get_ratelimits()["limit"]), file=sys.stderr)
