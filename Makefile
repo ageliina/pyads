@@ -1,5 +1,7 @@
-BIN=pyads.py
 TO=$(HOME)/.local/bin
+BIN=pyads.py
+BIN1=$(PWD)/pyads.py
+BIN2=$(TO)/$(basename $(BIN))
 
 install:
-	cp -v $(BIN) $(TO)/$(basename $(BIN))
+	ln -s $(BIN1) $(BIN2)
