@@ -81,6 +81,7 @@ FIELDS = ["abstract",
           "year"]
 
 
+
 def print_row(paper):
     """
     Pretty print the essential information of a paper.
@@ -90,7 +91,6 @@ def print_row(paper):
     print(u"%-19s %-20s %-s"
           % (paper.bibcode,
              func_trunc(paper.first_author, 20),
-             #func_trunc(paper.title[0], 100)))
              paper.title[0]))
 
 
@@ -121,6 +121,7 @@ def print_url_pdf(paper):
     """
     import doi
     print(doi.get_real_url_from_doi(paper.doi[0]) + "/pdf")
+
 
 
 def main():
