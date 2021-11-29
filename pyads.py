@@ -24,9 +24,6 @@ import argparse
 import sys
 import time
 
-import ads
-
-
 DESCRIPTION = "Query the ADS database."
 PARSER = argparse.ArgumentParser(description=DESCRIPTION)
 
@@ -84,6 +81,12 @@ FIELDS = ["abstract",
           "title",
           "year"]
 
+# Import the ads module
+if not ARGS.debug:
+    import ads
+else:
+    import ads.sandbox as ads
+
 
 def print_row(paper):
     """
@@ -116,6 +119,8 @@ def print_url_abs(paper):
     """
     Print the url to the ADS abstract.
     """
+    if paper.bibcode is None:
+        return
     print("https://ui.adsabs.harvard.edu/abs/%s/abstract" % paper.bibcode)
 
 
@@ -125,7 +130,6 @@ def print_url_pdf(paper):
     """
     if paper.bibcode is None:
         return
-
     url = "https://ui.adsabs.harvard.edu/link_gateway/%s" % paper.bibcode
     print(url + "/%s_PDF" % ("PUB" if paper.doi is not None else "EPRINT"))
 
@@ -134,10 +138,6 @@ def main():
     """
     Query ADS for the search string and print formatted results.
     """
-
-    # Import the ADS module
-    if ARGS.debug:
-        import ads.sandbox as ads
 
     # Query the ADS database
     query = ads.SearchQuery(fl=FIELDS, **QUERY_DICT)
