@@ -19,11 +19,13 @@ useful links for the ADS API and the ads python package
     https://adsabs.github.io/help/search/comprehensive-solr-term-list
 """
 
+
 import argparse
 import sys
 import time
 
 import ads
+
 
 DESCRIPTION = "Query the ADS database."
 PARSER = argparse.ArgumentParser(description=DESCRIPTION)
@@ -63,6 +65,8 @@ GROUP_OUTPUT.add_argument("--print_url_abs", action="store_true",
 GROUP_OUTPUT.add_argument("--print_url_pdf", action="store_true",
                           help="Print the ADS URL for the downloadables.")
 
+# Debug argument
+PARSER.add_argument("--debug", help="Enter debug mode", action="store_true")
 
 # Parse the command line arguments
 ARGS = PARSER.parse_args()
@@ -81,17 +85,17 @@ FIELDS = ["abstract",
           "year"]
 
 
-
 def print_row(paper):
     """
     Pretty print the essential information of a paper.
     """
-    def func_trunc(s, x):
-        return s if len(s) < x else s[:x - 3] + "..."
+    def func_trunc(string, limit):
+        """Truncate a `string` to `limit` characters followed by an ellipsis"""
+        return string if len(string) < limit else string[:limit - 3] + "..."
     print(u"%-19s %-20s %-s"
           % (paper.bibcode,
              func_trunc(paper.first_author, 20),
-             paper.title[0]))
+             func_trunc(paper.title[0], 200)))
 
 
 def print_abstract(paper):
@@ -117,17 +121,23 @@ def print_url_abs(paper):
 
 def print_url_pdf(paper):
     """
-    Print the url to the ADS link gateway.
+    Print the publisher/arxiv url to the ADS link gateway.
     """
-    import doi
-    print(doi.get_real_url_from_doi(paper.doi[0]) + "/pdf")
+    if paper.bibcode is None:
+        return
 
+    url = "https://ui.adsabs.harvard.edu/link_gateway/%s" % paper.bibcode
+    print(url + "/%s_PDF" % ("PUB" if paper.doi is not None else "EPRINT"))
 
 
 def main():
     """
     Query ADS for the search string and print formatted results.
     """
+
+    # Import the ADS module
+    if ARGS.debug:
+        import ads.sandbox as ads
 
     # Query the ADS database
     query = ads.SearchQuery(fl=FIELDS, **QUERY_DICT)
@@ -146,9 +156,12 @@ def main():
     print("Remaining (limit): %4s (%4s)"
           % (query.response.get_ratelimits()["remaining"],
              query.response.get_ratelimits()["limit"]), file=sys.stderr)
-    print("Reset (UTC): %s"
-          % time.ctime(int(query.response.get_ratelimits()["reset"])),
-          file=sys.stderr)
+
+    try:
+        time_reset = int(query.response.get_ratelimits()["reset"])
+    except ValueError:
+        time_reset = 0
+    print("Reset (UTC): %s" % time.ctime(time_reset), file=sys.stderr)
     return 0
 
 
