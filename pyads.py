@@ -70,16 +70,19 @@ ARGS = PARSER.parse_args()
 
 # Build the query dictionary i.e. filter out `none` values and invalid fields
 VALID_FIELDS = ["author", "bibstem", "bibcode", "full", "rows", "sort", "year"]
-QUERY_DICT = {k: v for k, v in ARGS.__dict__.items() if v and k in VALID_FIELDS}
+QUERY_DICT = {"database": "astronomy"}
+QUERY_DICT.update({k: v for k, v in ARGS.__dict__.items() if v and k in VALID_FIELDS})
 
 # Include these fields in the query result
-FIELDS = ["abstract",
-          "bibcode",
-          "bibtex",
-          "doi",
-          "first_author",
-          "title",
-          "year"]
+FIELDS = [
+    "abstract",
+    "bibcode",
+    "bibtex",
+    "doi",
+    "first_author",
+    "title",
+    "year"
+]
 
 # Import the ads module
 if not ARGS.debug:
